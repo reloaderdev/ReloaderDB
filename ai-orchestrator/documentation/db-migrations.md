@@ -50,6 +50,15 @@ V014__sp_update_equipment.sql
 | V013 | Campo `RegistrationSource` en `auth.Users` — valores: `ADMIN` / `PUBLIC` / `SUPPLIER` |
 | V014 | SP `auth.sp_RegisterPublicUser` — registro desde landing pública (RegistrationSource=PUBLIC) |
 | V015 | SP `auth.sp_RegisterSupplier` — registro de proveedores (RegistrationSource=SUPPLIER) |
+| V016 | Schema `market` — Category, Listing, ListingCategory, ListingImage, Contact, Review, SellerStats + `notification.MarketNotification` |
+| V017 | Seed de categorías del marketplace |
+| V018 | SPs de listings: `sp_CreateListing`, `sp_GetListings`, `sp_GetListingDetail`, `sp_CloseListing`, `sp_RenewListing`, `sp_CancelListing`, `sp_ExpireListings`, `sp_GetListingsExpiringSoon` |
+| V019 | SPs de contacto, reviews y notificaciones del marketplace |
+| V020 | Schema `menu` + `menu.sp_GetMenuByUser` |
+| V021 | Fix del seed de menú |
+| V022 | Seed de listings de ejemplo (UserId = 1) |
+| V023 | SPs `market.sp_AddListingImage` (máx 5 fotos, sin transacción propia), `market.sp_GetMyListings`, `market.sp_GetCategories` |
+| V024 | Desactiva el menú `PVP_ONLINE` (`IsActive = 0`); `MY_LISTINGS` queda activo. Reemplaza el borrador `V023__disable_menu_pvp_listings.sql` de reloaderproject-rest |
 
 ## Reglas para escribir migrations
 
@@ -66,6 +75,9 @@ V014__sp_update_equipment.sql
 | `auth` | Usuarios, login |
 | `catalog` | Items, lapis, tipos |
 | `equipment` | CharacterEquipment, sockets, lapis equipados |
+| `market` | Marketplace de contacto: listings, fotos (1..5), categorías, contactos, reviews |
+| `menu` | Menú dinámico por usuario/rol |
+| `notification` | Tokens FCM, notificaciones del marketplace |
 
 ## Ambiente local Docker
 
