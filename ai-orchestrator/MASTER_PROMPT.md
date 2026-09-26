@@ -85,6 +85,13 @@ flyway -url="jdbc:sqlserver://reloader-db-server.database.windows.net:1433;datab
 
 ---
 
+## GIT
+
+- Commits en español con firma `Authored-By: Reloader - Resembrink Correa`
+- Cuenta de GitHub: este repo es de **reloaderdev** (`github.com/reloaderdev/ReloaderDB`). El usuario tiene 2 cuentas: antes de un push/pull, avisar "si GitHub te pide elegir cuenta, elige **reloaderdev**". Si no aparece el selector, no hace falta nada
+
+---
+
 ## INICIALIZACIÓN
 
 **Trigger**: `reloader sesion`
