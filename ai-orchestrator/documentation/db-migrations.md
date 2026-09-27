@@ -12,8 +12,16 @@ reloaderproject-rest/
         ├── V012__item_image_url.sql
         ├── V013__add_registration_source.sql
         ├── V014__sp_register_public_user.sql
-        └── V015__sp_register_supplier.sql
+        ├── V015__sp_register_supplier.sql
+        ├── ...
+        ├── V025__register_player_with_character.sql
+        ├── ...
+        ├── V029__seed_demo_characters.sql
+        ├── V030__equip_by_slot_recommended_set.sql
+        └── V031__seed_test_players.sql
 ```
+
+**Las dos carpetas deben quedar idénticas:** `ReloaderDB/migrations/` (fuente de verdad) y `reloaderproject-rest/db/migrations/`.
 
 **Nota:** Las migrations V013+ fueron creadas para los microservicios (reloaderproject-ms) pero viven acá porque comparten la misma DB `reloader-games-db`.
 
@@ -59,6 +67,64 @@ V014__sp_update_equipment.sql
 | V022 | Seed de listings de ejemplo (UserId = 1) |
 | V023 | SPs `market.sp_AddListingImage` (máx 5 fotos, sin transacción propia), `market.sp_GetMyListings`, `market.sp_GetCategories` |
 | V024 | Desactiva el menú `PVP_ONLINE` (`IsActive = 0`); `MY_LISTINGS` queda activo. Reemplaza el borrador `V023__disable_menu_pvp_listings.sql` de reloaderproject-rest |
+| V025 | Registro de jugador con personaje: 7 clases nuevas en `core.Class` (6 por facción, 12 total), índice único `UX_core_Character_CharacterName`, columna `auth.Users.EmailCreated` (externos → 1), SPs `auth.sp_RegisterPlayerWithCharacter`, `core.sp_GetFactionsWithClasses`, `auth.sp_GetUserEmailStatus`, `auth.sp_ListPendingEmails` + backfill de UserProfile / rol PLAYER / core.Player a usuarios activos que no los tenían. Aplicada solo en sql-dev |
+| V026 | Catálogo de lapis completo (DAMAGE_ABSORPTION, tipo WEAPON, 23 lapis nuevos, correcciones) + limpieza SUPPLIER. Solo sql-dev |
+| V027 | Sets de las 12 clases + `catalog.ClassBaseStat` / `ClassStatPreference` / `ClassAutoLinkConfig`. Solo sql-dev |
+| V028 | `equipment.sp_AutoLinkCharacter`, registro nace equipado, result set 5 en `sp_GetCharacterScreenByUser`. Solo sql-dev |
+| V029 | Personajes demo (uno por clase) equipados. Solo sql-dev |
+| V030 | El personaje nace SIN set; `equipment.sp_GetRecommendedSet` y `equipment.sp_EquipSlots` (equipar por slot con el set de la clase como referencia); funciones `fn_ClassSetPieces` / `fn_RecommendedLapisForItem`. Solo sql-dev |
+| V031 | Usuarios de prueba de la sesión 2026-09-26 (van también a producción): `OtamendiWar` (otamendi, Guerrero Furia, solo casco) y `RyoskePlayer` / `ryoske` (Oráculo Furia, set recomendado completo). Solo sql-dev por ahora |
+
+### V025 — detalle
+
+- **Clases** (`<ARQUETIPO>_<FACCION>`): Luz → WARRIOR_LUZ Luchador, ASSASSIN_LUZ Ranger, HUNTER_LUZ Arquero, PAGAN_LUZ Mago, ORACLE_LUZ Cura, DEFENDER_LUZ Defensor. Furia → las 5 existentes + GUARDIAN_FURIA Guardian. FactionId resuelto por FactionCode; ClassId con saltos de IDENTITY (en sql-dev quedaron 1001..1007): no hardcodear
+- **CharacterName** único en todo el servidor, case-insensitive por la collation `SQL_Latin1_General_CP1_CI_AS`. Formato `^[A-Za-z0-9_]{3,20}$` validado en el SP con `COLLATE Latin1_General_BIN2` (para que `[A-Z]` no acepte tildes ni Ñ) y `DATALENGTH` (cuenta espacios finales)
+- **Email generado** = `LOWER(CharacterName) + '@reloader.dev'`; `EmailCreated = 0` hasta que el admin crea la casilla en Zoho
+- **sp_RegisterPlayerWithCharacter** → `Success, ErrorCode, UserId, CharacterId, Email`. Orden: INVALID_CHARACTER_NAME, USERNAME_TAKEN, CHARACTER_NAME_TAKEN, EMAIL_TAKEN, INVALID_CLASS. Transacción con `XACT_ABORT ON`; violaciones de índice único por carrera (2601/2627) se traducen al ErrorCode correspondiente
+- No se modificaron `sp_RegisterPublicUser`, `sp_CreateCharacter` ni `sp_LoginUser`
+
+### V026..V029 — catálogo completo, auto-linkeo y demos (aplicadas solo en sql-dev)
+
+| Versión | Descripción |
+|---|---|
+| V026 | Lapis completos: StatType `DAMAGE_ABSORPTION`, columna `catalog.Lapis.StatDamageAbsorption`, LapisType `WEAPON` (Chaotic, Max Flash), Ultimate Triple Craft → `TRIPLE` (`ULTIMATE` queda sin uso), Dual Craft/Fortune Lv7 → nivel 75, 23 lapis nuevos (Mystic/Wise/Safe Lv7-9, Life Lv7-10, Absorption Lv7-10, Dual Safe/Mystic/Wise/Shrewd Lv7, Ultimate Triple Wise/Safe) con `LapisEffect` y `LapisApplicableItemType`. Limpieza V025: SUPPLIER sin personajes pierden rol PLAYER y `core.Player` |
+| V027 | Sets de las 11 clases sin set (casco real + Mail/Gaiters/Bracers/Boots con las stats del casco, arma y escudo provisorios copiados del Cazador), `ItemStat` BASE, `ItemAllowedClass` (Bonespike, mascota, capa, alas y traje a las 12 clases). Tablas `catalog.ClassBaseStat` (provisorio 150/90/30), `catalog.ClassStatPreference` (Priority 1..3), `catalog.ClassAutoLinkConfig` (AbsorptionSockets) |
+| V028 | `equipment.sp_AutoLinkCharacter`; `auth.sp_RegisterPlayerWithCharacter` llama al auto-linkeo en la misma transacción (misma firma y resultado); `equipment.sp_GetCharacterScreenByUser` agrega el result set 5 (stats base de la clase) |
+| V029 | Auto-linkeo de DibuWar, RomeroSin, DePaulPagan, MacOracle + 7 usuarios demo (uno por clase faltante, password de desarrollo en `dbreadme/DEMOS.md`). NazgulKash no se toca |
+
+- **Regla de linkeo de lapis**: solo tipo de pieza (`LapisApplicableItemType`) + `Lapis.RequiredLevel <= Item.RequiredLevel` + socket libre + no repetir el mismo lapis en la pieza. **Nunca por clase**
+- **Encanto [20]** = `EnchantLevel 20` + `DamageAbsorption 240` en casco, top, pantalón, guantes, botas y escudo; el arma lleva 20 sin absorción (igual que NazgulKash)
+- **Stat total** = `catalog.ClassBaseStat` (se consulta por ClassId, no se copia) + `build.CharacterAssignedStat` + items + lapis. Absorción aparte
+- **sp_AutoLinkCharacter** `@CharacterId, @Silent = 0, @Applied OUTPUT` → `CharacterId, Applied, Status (LINKED | ALREADY_EQUIPPED), ItemsEquipped, SocketsCreated, LapisLinked` (sin result set con `@Silent = 1`). Si el personaje ya tiene equipo no hace nada. Slots del mismo tipo (anillos, brazaletes) se reparten por orden de ItemId. Por pieza: 0) lapis tipo WEAPON en el arma, 1) `AbsorptionSockets` lapis de absorción de mayor nivel (solo casters), 2) resto por puntaje = stats preferidos ×3/×2/×1 + HP/100. No usa lapis con stats que no suman a la clase; sí utilitarios sin stats (Max Flash, Sonic). Abre transacción propia solo si no hay una activa
+
+### V030 — equipar por slot y set recomendado (aplicada solo en sql-dev)
+
+- **El personaje nace SIN set**: `auth.sp_RegisterPlayerWithCharacter` ya no llama al auto-linkeo (misma firma y mismo result set)
+- **Lógica común extraída** (inline TVF, solo lectura):
+  - `equipment.fn_ClassSetPieces(@ClassId, @Level)` → `EquipmentSlotId, SlotCode, SlotName, SortOrder, ItemTypeId, ItemId, ItemName, MaxSockets, EnchantLevel, DamageAbsorption` (pieza del set por slot, encanto 20 / absorción 240 como V028)
+  - `equipment.fn_RecommendedLapisForItem(@ClassId, @ItemId)` → `SocketNumber, LapisId` (misma regla de lapis de V028)
+  - `equipment.sp_AutoLinkCharacter` se reescribió sobre ambas: misma firma y **mismo resultado** (comparado clase por clase, las 12, contra la versión V028: idéntico)
+- **`equipment.sp_GetRecommendedSet @CharacterId`** (no escribe) → 2 result sets:
+  1. `SlotCode, SlotName, SortOrder, ItemId, ItemName, MaxSockets, Equipped, EquippedItemName` — los 16 slots activos por SortOrder. ItemId/ItemName/MaxSockets = pieza del set de la clase (NULL si la clase no tiene pieza). `Equipped` = el personaje ya tiene algo en el slot; `EquippedItemName` NULL si vacío
+  2. `SlotCode, SocketNumber, LapisId, LapisName, LapisTypeCode` — slot vacío: sugeridos para la pieza del set; slot equipado: sugeridos para la pieza que tiene equipada (para "Linkear sugerido"). Slots con MaxSockets 0 no tienen filas
+  - Personaje inexistente o inactivo → ambos result sets vacíos
+- **`equipment.sp_EquipSlots @CharacterId, @SlotCodes ('BOOTS,GLOVES'), @WithRecommendedLapis = 0`** → 1 fila `Success, ErrorCode, EquippedCount, SkippedCount, LapisLinked`
+  - Solo los slots pedidos que estén vacíos: pieza del set + sockets 1..MaxSockets abiertos (vacíos, o con los sugeridos si `@WithRecommendedLapis = 1`). Slots ya equipados (o sin pieza para la clase) cuentan en `SkippedCount`
+  - Códigos sin distinguir mayúsculas, se ignoran espacios y repetidos
+  - `ErrorCode`: `CHARACTER_NOT_FOUND` | `INVALID_SLOT` (algún código inexistente/inactivo o lista vacía). Con error no escribe nada
+  - Transacción propia solo si no hay una activa (se puede probar dentro de `BEGIN TRAN .. ROLLBACK`)
+- **`sp_GetCharacterScreenByUser` sin cambios**: el result set 2 ya parte de `catalog.EquipmentSlot` con LEFT JOIN, así que un slot vacío llega como 1 fila con `CharacterEquipmentId`/`ItemId`/socket/lapis en NULL (16 filas para un personaje sin equipo)
+- El recomendado es solo una **referencia**: no restringe lo que se guarde después con `sp_SaveCharacterLapisConfig`
+- Dato de prueba `OtamendiWar` (usuario `otamendi`, WARRIOR_FURIA): creado a mano en sql-dev; desde V031 queda en migración
+- **sp_GetCharacterScreenByUser result set 5**: `StatCode NVARCHAR(30), StatValue INT` ordenado por StatTypeId (STR, DEX, REC, INT, WIS, LUC). Result sets 1..4 sin cambios
+
+### V031 — usuarios de prueba (aplicada solo en sql-dev)
+
+Los usuarios que se probaron en desarrollo se suben como datos de prueba para que existan igual en producción (decisión del usuario, 2026-09-26).
+
+- **OtamendiWar**: usuario `otamendi` del seed S000; `core.Character` WARRIOR_FURIA nivel 80 (principal si otamendi no tiene otro principal) + `sp_EquipSlots 'HELMET'` sin lapis (casco del set, encanto 20, sockets vacíos, como quedó probando "Añadir"). Si otamendi no existe, no hace nada
+- **RyoskePlayer / ryoske**: alta igual que `sp_RegisterPlayerWithCharacter` (Users `PUBLIC`, UserProfile, rol PLAYER, core.Player, personaje ORACLE_FURIA nivel 80 principal, email `ryoske@reloader.dev`, EmailCreated 0). `PasswordHash` y `Salt` copiados del alta en sql-dev: la contraseña es la misma que usó el usuario al registrarse. `sp_EquipSlots` de los 16 slots con `@WithRecommendedLapis = 1` → 16 piezas, 60 lapis (verificado: sin lapis fuera de pieza/nivel ni repetidos; absorción 1440 de encanto + 2250 de lapis)
+- Idempotente: no crea si ya existe el usuario, el email o el personaje; `sp_EquipSlots` solo equipa slots vacíos. En sql-dev se probó con nombres temporales dentro de `BEGIN TRAN .. ROLLBACK` y el resultado es idéntico al de los usuarios originales
 
 ## Reglas para escribir migrations
 
@@ -72,8 +138,9 @@ V014__sp_update_equipment.sql
 
 | Schema | Contenido |
 |---|---|
-| `auth` | Usuarios, login |
-| `catalog` | Items, lapis, tipos |
+| `auth` | Usuarios, login, roles, email reservado (`EmailCreated`) |
+| `core` | Facciones, clases (6 por facción), Player, Character (nombre único global) |
+| `catalog` | Items, lapis, tipos, maestros por clase (`ClassBaseStat`, `ClassStatPreference`, `ClassAutoLinkConfig`) |
 | `equipment` | CharacterEquipment, sockets, lapis equipados |
 | `market` | Marketplace de contacto: listings, fotos (1..5), categorías, contactos, reviews |
 | `menu` | Menú dinámico por usuario/rol |

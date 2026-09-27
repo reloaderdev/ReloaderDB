@@ -1,0 +1,38 @@
+LAPIS QUE FALTAN - una linea por lapis, separado por comas
+Nombre en ingles, tal cual el juego.
+
+formato:
+nombre, tipo, nivel, stat, valor, (mas stats si tiene), piezas
+
+tipo:   SINGLE / DUAL / TRIPLE / ULTIMATE
+stats:  STR DEX REC LUC INT WIS HP  (u otro: ABSORCION, DEF, RES...)
+piezas: TODAS, o HELMET TOP PANTS GLOVES BOOTS WEAPON SHIELD AMULET RING BRACELET
+
+ejemplos (ya existen, no copiar):
+Craft Lapis Lv9, SINGLE, 9, STR, 75, TODAS
+Chaotic Lapis, DUAL, 10, STR, 45, DEX, 45, WEAPON
+Ultimate Triple Craft Lapis, ULTIMATE, 10, STR, 35, REC, 30, HP, 1500, TODAS
+
+--- REC ---
+
+
+--- INT ---
+
+
+--- WIS ---
+
+
+--- DUALES ---
+
+
+--- TRIPLES / ULTIMATE ---
+
+
+--- ABSORCION / DEFENSA / RESISTENCIA ---
+
+
+--- OTROS ---
+
+
+--- NOTAS (reglas del juego) ---
+

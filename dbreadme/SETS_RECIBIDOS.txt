@@ -1,0 +1,27 @@
+SETS RECIBIDOS DEL USUARIO (para la migracion de catalogo + personajes demo)
+Nombres tal cual el juego. Se pueden cambiar despues (ItemName es solo texto).
+[20] = encanto (EnchantLevel). Encanto 20 = Damage Absorption +240 por pieza.
+Stats = casco VACIO (sin encanto ni lapis).
+
+Resto de piezas: mismo patron que el set del Cazador (Luminous Tyrant's):
+  HELMET = <X> Helm | TOP = <X> Mail | PANTS = <X> Gaiters | GLOVES = <X> Bracers | BOOTS = <X> Boots
+  (provisorio: si en el juego se llaman distinto, p.ej. Robe, se corrige despues)
+
+--- CASCOS POR CLASE ---   clase Luz | clase Furia | stats base del casco
+Luchador (Fighter)  : Luminous Emperor's Helm  | Guerrero (Warrior): Luminous Vendetta Helm
+  DEF 254, RES 125, HP 2933, SP 733, STR 52, DEX 52, REC 59
+Defensor (Defender) : Luminous Imperial Helm   | Guardian          : Luminous Grudge Helm
+  DEF 254, RES 125, HP 2933, SP 733, STR 52, DEX 52, REC 59
+Ranger              : Luminous Authority Helm  | Asesino (Assassin): Luminous Slayer's Helm
+  DEF 181, RES 157, HP 1951, SP 2933, STR 52, DEX 59, LUC 52
+Arquero (Archer)    : Luminous Supremacy Helm  | Cazador (Hunter)  : Luminous Tyrant's Helm (ya existe, Messi)
+  DEF 181, RES 157, HP 1951, SP 2933, STR 52, DEX 52, LUC 59
+Mago (Mage)         : Luminous Sage's Helm     | Pagano (Pagan)    : Luminous Corrupt Helm
+  DEF 181, RES 157, HP 1466, MP 2933, WIS 52, LUC 52, INT 59
+Cura (Priest)       : Luminous Cleric's Helm   | Oraculo (Oracle)  : Luminous Profane Helm
+  DEF 121, RES 211, HP 1466, MP 2933, INT 52, WIS 59, LUC 52
+
+--- PENDIENTE ---
+- Stats de top, pantalon, guantes y botas (si difieren del casco)
+- Armas y escudos por clase
+- Accesorios (amuleto, anillos, brazaletes): se puede reusar Bonespike para todas

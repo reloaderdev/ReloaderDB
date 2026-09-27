@@ -1,0 +1,66 @@
+LAPIS RECIBIDOS DEL USUARIO (para la migracion de catalogo)
+nombre, tipo, nivel, stats, piezas, nivel minimo del item
+Piezas: Upper Armor = TOP, Lower Armor = PANTS, Gauntlet = GLOVES, Shoes = BOOTS
+
+--- INT ---
+Mystic Lapis Lv9, SINGLE, 9, INT 75, WEAPON HELMET PANTS SHIELD GLOVES, 75
+Mystic Lapis Lv8, SINGLE, 8, INT 65, WEAPON HELMET TOP PANTS SHIELD GLOVES BOOTS, 71
+Mystic Lapis Lv7, SINGLE, 7, INT 50, WEAPON TOP PANTS GLOVES BOOTS, 31
+
+--- WIS ---
+Wise Lapis Lv9, SINGLE, 9, WIS 75, WEAPON HELMET PANTS SHIELD GLOVES, 75
+Wise Lapis Lv8, SINGLE, 8, WIS 65, WEAPON HELMET TOP PANTS SHIELD GLOVES BOOTS, 71
+Wise Lapis Lv7, SINGLE, 7, WIS 50, WEAPON PANTS GLOVES BOOTS, 31   (confirmado: NO va en TOP)
+
+--- REC ---
+Safe Lapis Lv9, SINGLE, 9, REC 75, WEAPON HELMET PANTS SHIELD GLOVES, 75
+Safe Lapis Lv8, SINGLE, 8, REC 65, WEAPON HELMET TOP PANTS SHIELD GLOVES BOOTS, 71
+Safe Lapis Lv7, SINGLE, 7, REC 50, WEAPON PANTS SHIELD GLOVES BOOTS, 31
+
+--- ABSORCION ---
+No suma stat: resta dano recibido por golpe. Valor aparte del jugador (base del item [20] + lapis).
+Absorption Lapis Lv10, SINGLE, 10, DAMAGE_ABSORPTION 250, TOP PANTS SHIELD GLOVES BOOTS, 80
+Absorption Lapis Lv9, SINGLE, 9, DAMAGE_ABSORPTION 200, TOP PANTS SHIELD GLOVES BOOTS, 75
+Absorption Lapis Lv8, SINGLE, 8, DAMAGE_ABSORPTION 150, TOP PANTS SHIELD GLOVES BOOTS, 71
+Absorption Lapis Lv7, SINGLE, 7, DAMAGE_ABSORPTION 100, TOP PANTS SHIELD GLOVES BOOTS, 45
+(no van en HELMET ni WEAPON)
+
+REGLAS DE ABSORCION (explicadas por el usuario):
+- [20] en una pieza es el ENCANTO (EnchantLevel), no la absorcion. Encanto 20 = Damage Absorption +240 por pieza
+  (por eso NazgulKash/Messi tiene 240 en cada pieza: esta bien).
+- Clases de dano (Cazador/Arquero, Guerrero/Luchador, Guardian/Defensor, Asesino/Ranger) NO linkean absorcion:
+  ocupar sockets con absorcion les hace perder dano.
+- Oraculo/Cura y Pagano/Mago SI: se visten de REC + absorcion (la mayor cantidad posible).
+
+--- HP (vida) ---   Necklaces = AMULET
+Life Lapis Lv10, SINGLE, 10, HP 3000, TOP BOOTS AMULET, 80
+Life Lapis Lv9, SINGLE, 9, HP 2500, TOP BOOTS AMULET, 75
+Life Lapis Lv8, SINGLE, 8, HP 2200, HELMET TOP PANTS SHIELD GLOVES BOOTS AMULET, 71
+Life Lapis Lv7, SINGLE, 7, HP 2000, TOP PANTS SHIELD GLOVES BOOTS, 31
+
+--- TRIPLES ULTIMATE (nuevos) ---
+Ultimate Triple Wise Lapis, TRIPLE, 10, INT 30 WIS 35 HP 1500, HELMET TOP PANTS SHIELD GLOVES, 75
+Ultimate Triple Safe Lapis, TRIPLE, 10, REC 35 WIS 30 HP 1500, HELMET TOP PANTS GLOVES, 75
+(ya existen: Ultimate Triple Fortune STR30/LUC35, Ultimate Triple Shrewd DEX30/LUC30,
+ Ultimate Triple Craft STR35/REC30)
+CORRECCION confirmada por el usuario: Ultimate Triple Craft Lapis debe ser tipo TRIPLE (hoy esta como ULTIMATE).
+  Queda: Ultimate Triple Craft Lapis, TRIPLE, 10, STR 35 REC 30 HP 1500, HELMET TOP PANTS GLOVES, 75
+
+--- DUALES ---
+CORRECCION confirmada por el usuario: nivel minimo del item de los duales Lv7 es 75 (hoy estan en 65).
+  Dual Craft Lapis Lv7, DUAL, 7, STR 40 DEX 35, HELMET TOP PANTS GLOVES, 75
+  Dual Fortune Lapis Lv7, DUAL, 7, DEX 35 LUC 40, HELMET TOP PANTS GLOVES, 75
+(existentes sin cambios: Dual Craft Lv6 y Dual Fortune Lv6, 60)
+
+--- LAPIS EXCLUSIVOS DE ARMA ---
+El usuario confirma: Chaotic Lapis NO es dual, es exclusivo de arma.
+Propuesta: nuevo tipo en catalog.LapisType -> WEAPON ("Lapis de arma").
+  Chaotic Lapis, WEAPON, 10, STR 45 DEX 45, WEAPON, 75
+  Max Flash Lapis, WEAPON, 10, (sin stats), WEAPON   (confirmado: exclusivo de arma; hoy esta como SINGLE)
+Duales nuevos:
+  Dual Safe Lapis Lv7, DUAL, 7, REC 40 WIS 35, HELMET TOP PANTS GLOVES, 75
+  Dual Mystic Lapis Lv7, DUAL, 7, WIS 40 INT 35, HELMET TOP PANTS GLOVES, 75
+  Dual Wise Lapis Lv7, DUAL, 7, INT 40 WIS 35, HELMET TOP PANTS GLOVES, 75
+  Dual Shrewd Lapis Lv7, DUAL, 7, DEX 40 REC 35, HELMET TOP PANTS GLOVES, 75
+  (confirmado: el nombre es el original del juego y los valores son los de la descripcion,
+   aunque no coincidan con el stat que sugiere el nombre; ej. Dual Mystic = WIS 40 / INT 35)
