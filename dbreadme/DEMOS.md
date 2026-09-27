@@ -3,7 +3,7 @@
 Creados / equipados por `V029__seed_demo_characters.sql`. Uno por clase, todos nivel 80,
 equipados con `equipment.sp_AutoLinkCharacter` (set de la clase, encanto [20], lapis de referencia).
 
-**Password de DESARROLLO de los usuarios `demo_*`: `Demo1234`**
+**Password de los usuarios `demo_*`: `DemoReloader2026!`** (desde V032; en V029 era `Demo1234`)
 (hash igual que `auth.sp_RegisterUser`: SHA2_256(password nvarchar + salt), salt `CRYPT_GEN_RANDOM(32)`).
 Van tambien a produccion como datos de prueba (decision del usuario, 2026-09-26): la password es conocida,
 desactivarlos (`IsActive = 0`) cuando ya no se usen.

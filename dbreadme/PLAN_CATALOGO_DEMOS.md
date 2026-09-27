@@ -68,9 +68,12 @@ auth-service (`/auth/factions`, `/auth/register-player`, `/auth/email-status`), 
 base de la clase (catalog.ClassBaseStat) + puntos asignados (build.CharacterAssignedStat)
 + items equipados (catalog.Item) + lapis (catalog.Lapis); absorcion aparte.
 
-## Antes de produccion
-- Marcar EmailCreated = 1 en casillas de Zoho existentes.
-- Flyway V025..V031 en Azure, deploy de auth-service y REST, app con IS_DEV = false.
+## Produccion — HECHO (2026-09-26)
+- Azure SQL en v032; REST 1.0.24 y auth-service 1.0.4 desplegados y verificados.
+
+## Antes de produccion (historico)
+- EmailCreated de las casillas de Zoho existentes: por ahora queda como esta (decision del usuario 2026-09-26).
+- Flyway V025..V032 en Azure (V032: contrasena demo `DemoReloader2026!`), deploy de auth-service y REST, app con IS_DEV = false.
 
 ## Datos pendientes del usuario (no bloquean)
 - Stats base reales por clase (nivel 80 sin equipo)

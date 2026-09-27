@@ -18,7 +18,8 @@ reloaderproject-rest/
         ├── ...
         ├── V029__seed_demo_characters.sql
         ├── V030__equip_by_slot_recommended_set.sql
-        └── V031__seed_test_players.sql
+        ├── V031__seed_test_players.sql
+        └── V032__demo_password.sql
 ```
 
 **Las dos carpetas deben quedar idénticas:** `ReloaderDB/migrations/` (fuente de verdad) y `reloaderproject-rest/db/migrations/`.
@@ -67,13 +68,14 @@ V014__sp_update_equipment.sql
 | V022 | Seed de listings de ejemplo (UserId = 1) |
 | V023 | SPs `market.sp_AddListingImage` (máx 5 fotos, sin transacción propia), `market.sp_GetMyListings`, `market.sp_GetCategories` |
 | V024 | Desactiva el menú `PVP_ONLINE` (`IsActive = 0`); `MY_LISTINGS` queda activo. Reemplaza el borrador `V023__disable_menu_pvp_listings.sql` de reloaderproject-rest |
-| V025 | Registro de jugador con personaje: 7 clases nuevas en `core.Class` (6 por facción, 12 total), índice único `UX_core_Character_CharacterName`, columna `auth.Users.EmailCreated` (externos → 1), SPs `auth.sp_RegisterPlayerWithCharacter`, `core.sp_GetFactionsWithClasses`, `auth.sp_GetUserEmailStatus`, `auth.sp_ListPendingEmails` + backfill de UserProfile / rol PLAYER / core.Player a usuarios activos que no los tenían. Aplicada solo en sql-dev |
-| V026 | Catálogo de lapis completo (DAMAGE_ABSORPTION, tipo WEAPON, 23 lapis nuevos, correcciones) + limpieza SUPPLIER. Solo sql-dev |
-| V027 | Sets de las 12 clases + `catalog.ClassBaseStat` / `ClassStatPreference` / `ClassAutoLinkConfig`. Solo sql-dev |
-| V028 | `equipment.sp_AutoLinkCharacter`, registro nace equipado, result set 5 en `sp_GetCharacterScreenByUser`. Solo sql-dev |
-| V029 | Personajes demo (uno por clase) equipados. Solo sql-dev |
-| V030 | El personaje nace SIN set; `equipment.sp_GetRecommendedSet` y `equipment.sp_EquipSlots` (equipar por slot con el set de la clase como referencia); funciones `fn_ClassSetPieces` / `fn_RecommendedLapisForItem`. Solo sql-dev |
-| V031 | Usuarios de prueba de la sesión 2026-09-26 (van también a producción): `OtamendiWar` (otamendi, Guerrero Furia, solo casco) y `RyoskePlayer` / `ryoske` (Oráculo Furia, set recomendado completo). Solo sql-dev por ahora |
+| V025 | Registro de jugador con personaje: 7 clases nuevas en `core.Class` (6 por facción, 12 total), índice único `UX_core_Character_CharacterName`, columna `auth.Users.EmailCreated` (externos → 1), SPs `auth.sp_RegisterPlayerWithCharacter`, `core.sp_GetFactionsWithClasses`, `auth.sp_GetUserEmailStatus`, `auth.sp_ListPendingEmails` + backfill de UserProfile / rol PLAYER / core.Player a usuarios activos que no los tenían. En producción desde 2026-09-26 |
+| V026 | Catálogo de lapis completo (DAMAGE_ABSORPTION, tipo WEAPON, 23 lapis nuevos, correcciones) + limpieza SUPPLIER. En producción desde 2026-09-26 |
+| V027 | Sets de las 12 clases + `catalog.ClassBaseStat` / `ClassStatPreference` / `ClassAutoLinkConfig`. En producción desde 2026-09-26 |
+| V028 | `equipment.sp_AutoLinkCharacter`, registro nace equipado, result set 5 en `sp_GetCharacterScreenByUser`. En producción desde 2026-09-26 |
+| V029 | Personajes demo (uno por clase) equipados. En producción desde 2026-09-26 |
+| V030 | El personaje nace SIN set; `equipment.sp_GetRecommendedSet` y `equipment.sp_EquipSlots` (equipar por slot con el set de la clase como referencia); funciones `fn_ClassSetPieces` / `fn_RecommendedLapisForItem`. En producción desde 2026-09-26 |
+| V031 | Usuarios de prueba de la sesión 2026-09-26 (van también a producción): `OtamendiWar` (otamendi, Guerrero Furia, solo casco) y `RyoskePlayer` / `ryoske` (Oráculo Furia, set recomendado completo) |
+| V032 | Contraseña única de los `demo_*`: `DemoReloader2026!` (reemplaza `Demo1234` de V029; salt nuevo por usuario, FailedAttempts 0). No toca RyoskePlayer ni el seed S000 |
 
 ### V025 — detalle
 
@@ -83,7 +85,7 @@ V014__sp_update_equipment.sql
 - **sp_RegisterPlayerWithCharacter** → `Success, ErrorCode, UserId, CharacterId, Email`. Orden: INVALID_CHARACTER_NAME, USERNAME_TAKEN, CHARACTER_NAME_TAKEN, EMAIL_TAKEN, INVALID_CLASS. Transacción con `XACT_ABORT ON`; violaciones de índice único por carrera (2601/2627) se traducen al ErrorCode correspondiente
 - No se modificaron `sp_RegisterPublicUser`, `sp_CreateCharacter` ni `sp_LoginUser`
 
-### V026..V029 — catálogo completo, auto-linkeo y demos (aplicadas solo en sql-dev)
+### V026..V029 — catálogo completo, auto-linkeo y demos (sql-dev y producción, 2026-09-26)
 
 | Versión | Descripción |
 |---|---|
@@ -97,7 +99,7 @@ V014__sp_update_equipment.sql
 - **Stat total** = `catalog.ClassBaseStat` (se consulta por ClassId, no se copia) + `build.CharacterAssignedStat` + items + lapis. Absorción aparte
 - **sp_AutoLinkCharacter** `@CharacterId, @Silent = 0, @Applied OUTPUT` → `CharacterId, Applied, Status (LINKED | ALREADY_EQUIPPED), ItemsEquipped, SocketsCreated, LapisLinked` (sin result set con `@Silent = 1`). Si el personaje ya tiene equipo no hace nada. Slots del mismo tipo (anillos, brazaletes) se reparten por orden de ItemId. Por pieza: 0) lapis tipo WEAPON en el arma, 1) `AbsorptionSockets` lapis de absorción de mayor nivel (solo casters), 2) resto por puntaje = stats preferidos ×3/×2/×1 + HP/100. No usa lapis con stats que no suman a la clase; sí utilitarios sin stats (Max Flash, Sonic). Abre transacción propia solo si no hay una activa
 
-### V030 — equipar por slot y set recomendado (aplicada solo en sql-dev)
+### V030 — equipar por slot y set recomendado (sql-dev y producción, 2026-09-26)
 
 - **El personaje nace SIN set**: `auth.sp_RegisterPlayerWithCharacter` ya no llama al auto-linkeo (misma firma y mismo result set)
 - **Lógica común extraída** (inline TVF, solo lectura):
@@ -118,7 +120,7 @@ V014__sp_update_equipment.sql
 - Dato de prueba `OtamendiWar` (usuario `otamendi`, WARRIOR_FURIA): creado a mano en sql-dev; desde V031 queda en migración
 - **sp_GetCharacterScreenByUser result set 5**: `StatCode NVARCHAR(30), StatValue INT` ordenado por StatTypeId (STR, DEX, REC, INT, WIS, LUC). Result sets 1..4 sin cambios
 
-### V031 — usuarios de prueba (aplicada solo en sql-dev)
+### V031 — usuarios de prueba (sql-dev y producción, 2026-09-26)
 
 Los usuarios que se probaron en desarrollo se suben como datos de prueba para que existan igual en producción (decisión del usuario, 2026-09-26).
 
