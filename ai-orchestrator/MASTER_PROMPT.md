@@ -49,7 +49,7 @@ ReloaderDB/
 | Migration | `V{numero}__{descripcion}.sql` | `V023__add_inventory_table.sql` |
 | Seed | `S{numero}__{descripcion}.sql` | `S001__seed_inventory_items.sql` |
 
-**Regla:** nunca modificar un archivo ya aplicado. Cada cambio es un archivo nuevo.
+**Regla:** una sola migración ABIERTA a la vez; los cambios se agregan a esa (editar + reaplicar en local). Después de cada cambio preguntar al usuario *"V0NN está abierta, ¿la cierras?"*; solo si dice que sí queda CERRADA y el próximo cambio abre `V0NN+1`. Nunca modificar una migración CERRADA ni una aplicada en producción. Detalle: `documentation/db-migrations.md` ("Migración abierta / cerrada").
 
 ---
 
@@ -103,7 +103,7 @@ flyway -url="jdbc:sqlserver://reloader-db-server.database.windows.net:1433;datab
 
 ## PROHIBIDO
 
-- Modificar migraciones ya aplicadas
-- Hacer cambios de schema sin crear un archivo nuevo
+- Modificar migraciones CERRADAS o ya aplicadas en producción
+- Crear una migración nueva por cada cambio chico (van en la ABIERTA)
 - Ejecutar en producción sin validar en local primero
 - Hacer commit o push sin instrucción explícita del usuario

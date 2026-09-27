@@ -35,7 +35,7 @@ V{numero}__{descripcion_snake_case}.sql
 - Número correlativo: `V001`, `V002`, ..., `V012`, `V013`, ...
 - Doble guion bajo (`__`) entre versión y descripción — requisito de Flyway
 - Descripción en snake_case, en inglés
-- Una responsabilidad por archivo
+- **Una migración abierta a la vez** (ver "Migración abierta / cerrada")
 
 **Ejemplos correctos:**
 ```
@@ -76,6 +76,7 @@ V014__sp_update_equipment.sql
 | V030 | El personaje nace SIN set; `equipment.sp_GetRecommendedSet` y `equipment.sp_EquipSlots` (equipar por slot con el set de la clase como referencia); funciones `fn_ClassSetPieces` / `fn_RecommendedLapisForItem`. En producción desde 2026-09-26 |
 | V031 | Usuarios de prueba de la sesión 2026-09-26 (van también a producción): `OtamendiWar` (otamendi, Guerrero Furia, solo casco) y `RyoskePlayer` / `ryoske` (Oráculo Furia, set recomendado completo) |
 | V032 | Contraseña única de los `demo_*`: `DemoReloader2026!` (reemplaza `Demo1234` de V029; salt nuevo por usuario, FailedAttempts 0). No toca RyoskePlayer ni el seed S000 |
+| V033 | **CERRADA 2026-09-27, pendiente de producción.** Ultimate Triple Mystic (INT 35 / WIS 30 / HP 1500); columna `catalog.Lapis.IconUrl` (Triples, Mechanic, Pure, Sonic, Max Flash, Chaotic, Life, Absorption con imagen propia; Single/Dual `gem_*.png` por la familia del NOMBRE: Dual Mystic = INT, Dual Wise = WIS); `sp_GetCharacterScreenByUser` devuelve `LapisIconUrl` / `IconUrl`; `catalog.Item.ImageUrl` genérica por tipo (`helmet` / `weapon` / `suit` / `cape` `_img_dark.png`); Oráculo `ClassStatPreference` REC:1 WIS:2 |
 
 ### V025 — detalle
 
@@ -133,8 +134,34 @@ Los usuarios que se probaron en desarrollo se suben como datos de prueba para qu
 1. **Idempotencia donde sea posible**: usar `CREATE OR ALTER PROCEDURE`, `IF NOT EXISTS`
 2. **Sin hardcodear IDENTITY values**: usar JOINs dinámicos para referenciar filas (ver V008)
 3. **GO como separador**: necesario para DDL en SQL Server cuando hay múltiples statements
-4. **Una sola responsabilidad**: no mezclar DDL con DML con SPs en el mismo archivo
+4. **Secciones dentro del archivo**: DDL, datos y SPs van en la misma migración, en secciones numeradas separadas por `GO`
 5. **Nunca modificar un archivo ya aplicado en producción**: crear uno nuevo (`flyway repair` solo si fue un error antes de aplicar en prod)
+
+## Migración abierta / cerrada (decisión del usuario 2026-09-27)
+
+Funciona como una rama con commits: **una sola migración ABIERTA a la vez**, no una por cambio.
+
+**Migración abierta actual: ninguna** — la próxima es `V034`. `V033` CERRADA, pendiente de producción. Producción en `v032`. (Actualizar esta línea al cerrar/abrir.)
+
+### Flujo por cada cambio en la base
+1. El cambio va en la migración ABIERTA (se edita ese archivo; nunca crear `V0NN+1` por cuenta propia). Si no hay ninguna abierta, se abre la siguiente.
+2. Reaplicarla en local:
+   ```sql
+   DELETE FROM dbo.flyway_schema_history WHERE version = 'NNN';
+   ```
+   y luego `flyway migrate`. Por eso debe ser re-ejecutable: los UPDATE recalculan el valor completo (no solo `WHERE ... IS NULL`), los INSERT con `IF NOT EXISTS`.
+3. **Siempre preguntar al usuario al terminar el cambio:** *"V0NN está abierta, ¿la cierras?"*
+   - **No** → se sigue trabajando en la misma.
+   - **Sí** → encabezado a `-- ESTADO: CERRADA`, actualizar la línea "Migración abierta actual" y el historial. El archivo cerrado **no se vuelve a tocar**, aunque no esté en producción. El próximo cambio abre `V0NN+1`.
+
+El usuario cierra cuando se hizo algo fuerte que quedó bien, para protegerlo de errores posteriores (como un commit). Si la abierta rompe algo en local, se corrige dentro de ella; las cerradas no se tocan (el archivo queda intacto, pero los datos locales no se revierten solos).
+
+Dentro de la migración, DDL, datos y SPs van en secciones numeradas separadas por `GO`.
+
+### Pase a producción
+Solo cuando el usuario dice **"esto va a producción"**. Flyway aplica en orden todas las pendientes (ej. `V033`, `V034`, `V035`) en Azure SQL — **no se juntan en una sola**. La que estaba abierta se cierra antes del pase.
+
+Cada migración lleva en su encabezado `-- ESTADO: ABIERTA` o `-- ESTADO: CERRADA`.
 
 ## Schemas en uso
 
