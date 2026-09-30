@@ -22,7 +22,8 @@ reloaderproject-rest/
         ├── V032__demo_password.sql
         ├── V033__lapis_icons_triple_mystic.sql
         ├── V034__item_recreation_over_max.sql
-        └── V035__player_multiple_characters.sql
+        ├── V035__player_multiple_characters.sql
+        └── V036__lapis_levels_and_lv10.sql
 ```
 
 **Las dos carpetas deben quedar idénticas:** `ReloaderDB/migrations/` (fuente de verdad) y `reloaderproject-rest/db/migrations/`.
@@ -82,6 +83,7 @@ V014__sp_update_equipment.sql
 | V033 | **CERRADA. En producción desde 2026-09-27.** Ultimate Triple Mystic (INT 35 / WIS 30 / HP 1500); columna `catalog.Lapis.IconUrl` (Triples, Mechanic, Pure, Sonic, Max Flash, Chaotic, Life, Absorption con imagen propia; Single/Dual `gem_*.png` por la familia del NOMBRE: Dual Mystic = INT, Dual Wise = WIS); `sp_GetCharacterScreenByUser` devuelve `LapisIconUrl` / `IconUrl`; `catalog.Item.ImageUrl` genérica por tipo (`helmet` / `weapon` / `suit` / `cape` `_img_dark.png`); Oráculo `ClassStatPreference` REC:1 WIS:2 |
 | V034 | **CERRADA. En producción desde 2026-09-30.** Recreación "Over max." de armaduras (ver detalle abajo): `catalog.RecreationBuild` / `RecreationBuildValue` / `RecreationApplicableItemType` / `ClassRecreationPreference` / `ClassRecreationConfig`, `equipment.EquippedItemRecreation` / `EquippedItemRecreationStat`, SPs `equipment.sp_GetRecreationSuggestion` y `equipment.sp_SaveRecreationConfig`, result sets 6..8 en `sp_GetCharacterScreenByUser` |
 | V035 | **CERRADA. En producción desde 2026-09-30.** Varios personajes por usuario desde la app (ver detalle abajo): SPs `core.sp_ListPlayerCharacters`, `core.sp_CreatePlayerCharacter` y `core.sp_SetPrimaryCharacter`. Sin tablas nuevas |
+| V036 | **CERRADA (2026-09-30).** Pendiente de producción. Catálogo de lapis: `LapisLevel` admite NULL (sin nivel: Chaotic y los 6 Ultimate Triple, la app ya no muestra "Lv10"); Max Flash Lapis → **Flash Lapis Lv3** (nivel 3, solo armas, velocidad de ataque +3); Ultimate Triple Wise reafirmado (HP 1500 / INT 30 / WIS 35; Casco, Armadura superior e inferior, Escudo, Guantelete); nuevos Lv10 +85 con RequiredLevel 80: Fortune (LUC), Craft (STR), Shrewd (DEX), Wise (WIS), Safe (REC), Mystic (INT) en Armas, Casco, Armadura inferior, Escudo, Guantelete (icono de su familia). Life / Absorption Lv10 ya existían y el linkeo sugerido los toma solo. Stats que el lapis no usa en NULL (un 0 saldría "+0" en la app). `fn_RecommendedLapisForItem`: **Sonic Lapis Lv2 siempre en botas, socket 1** (antes quedaba fuera por no tener stats; aplica a set recomendado y Linkear sugerido) |
 
 ### V035 — varios personajes por usuario (sql-dev, 2026-09-30)
 
@@ -175,7 +177,7 @@ Los usuarios que se probaron en desarrollo se suben como datos de prueba para qu
 
 Funciona como una rama con commits: **una sola migración ABIERTA a la vez**, no una por cambio.
 
-**Migración abierta actual: ninguna** — la próxima es `V036`. Producción en `v035` (2026-09-30). (Actualizar esta línea al cerrar/abrir.)
+**Migración abierta actual: ninguna** — la próxima es `V037`. V036 cerrada 2026-09-30 (pendiente de producción). Producción en `v035` (2026-09-30). (Actualizar esta línea al cerrar/abrir.)
 
 ### Flujo por cada cambio en la base
 1. El cambio va en la migración ABIERTA (se edita ese archivo; nunca crear `V0NN+1` por cuenta propia). Si no hay ninguna abierta, se abre la siguiente.
