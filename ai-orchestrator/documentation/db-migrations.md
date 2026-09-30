@@ -19,7 +19,9 @@ reloaderproject-rest/
         ├── V029__seed_demo_characters.sql
         ├── V030__equip_by_slot_recommended_set.sql
         ├── V031__seed_test_players.sql
-        └── V032__demo_password.sql
+        ├── V032__demo_password.sql
+        ├── V033__lapis_icons_triple_mystic.sql
+        └── V034__item_recreation_over_max.sql
 ```
 
 **Las dos carpetas deben quedar idénticas:** `ReloaderDB/migrations/` (fuente de verdad) y `reloaderproject-rest/db/migrations/`.
@@ -77,6 +79,24 @@ V014__sp_update_equipment.sql
 | V031 | Usuarios de prueba de la sesión 2026-09-26 (van también a producción): `OtamendiWar` (otamendi, Guerrero Furia, solo casco) y `RyoskePlayer` / `ryoske` (Oráculo Furia, set recomendado completo) |
 | V032 | Contraseña única de los `demo_*`: `DemoReloader2026!` (reemplaza `Demo1234` de V029; salt nuevo por usuario, FailedAttempts 0). No toca RyoskePlayer ni el seed S000 |
 | V033 | **CERRADA. En producción desde 2026-09-27.** Ultimate Triple Mystic (INT 35 / WIS 30 / HP 1500); columna `catalog.Lapis.IconUrl` (Triples, Mechanic, Pure, Sonic, Max Flash, Chaotic, Life, Absorption con imagen propia; Single/Dual `gem_*.png` por la familia del NOMBRE: Dual Mystic = INT, Dual Wise = WIS); `sp_GetCharacterScreenByUser` devuelve `LapisIconUrl` / `IconUrl`; `catalog.Item.ImageUrl` genérica por tipo (`helmet` / `weapon` / `suit` / `cape` `_img_dark.png`); Oráculo `ClassStatPreference` REC:1 WIS:2 |
+| V034 | **CERRADA (2026-09-30).** Recreación "Over max." de armaduras (ver detalle abajo): `catalog.RecreationBuild` / `RecreationBuildValue` / `RecreationApplicableItemType` / `ClassRecreationPreference` / `ClassRecreationConfig`, `equipment.EquippedItemRecreation` / `EquippedItemRecreationStat`, SPs `equipment.sp_GetRecreationSuggestion` y `equipment.sp_SaveRecreationConfig`, result sets 6..8 en `sp_GetCharacterScreenByUser` |
+
+### V034 — recreación "Over max." (sql-dev, 2026-09-29)
+
+Regla del juego (definida por el usuario, 2026-09-29):
+
+| Modalidad | Fijo (no se cambia) | Valores que el jugador reparte |
+|---|---|---|
+| `OVER_MAX_1` — Over max. 1 | HP +4400 | 98 / 69 / 44 |
+| `OVER_MAX_2` — Over max. 2 | HP +6400, MP +2000, SP +2000 | 88 / 44 / 44 |
+
+- Solo casco, top, medias (PANTS), guantes y botas (`RecreationApplicableItemType`); cada pieza lleva su propia modalidad
+- Los 3 valores van a 3 stats **distintos** entre STR DEX REC INT WIS LUC (`StatType.IsPrimary = 1`); nunca HP / MP / SP
+- **No se mezclan modalidades**: solo se guarda la modalidad y el stat de cada posición (`ValueSlot` 1..3, 1 = valor más alto); HP/MP/SP y los valores salen siempre de la modalidad
+- Sugerida por clase: `ClassRecreationPreference` (valor más alto → Priority 1) + modalidad en `ClassRecreationConfig` (hoy `OVER_MAX_1` para todas). Tabla aparte de `ClassStatPreference` para no cambiar el auto-linkeo de lapis. Terceros stats: Guardián/Defensor REC, Asesino/Ranger LUC, Oráculo/Cura DEX; Oráculo sigue V033 (REC 1, WIS 2)
+- `sp_SaveRecreationConfig` ErrorCodes: `CHARACTER_NOT_FOUND`, `EMPTY_CONFIG`, `DUPLICATE_PIECE`, `EQUIPMENT_NOT_OWNED`, `ITEM_NOT_RECREATABLE`, `INVALID_BUILD`, `INVALID_STAT`, `DUPLICATE_STAT`. Con error no escribe nada. `BuildCode` vacío = quitar la recreación
+- `sp_GetCharacterScreenByUser`: result sets 1..5 sin cambios; 6 = modalidades, 7 = tipos recreables, 8 = recreación por pieza
+- `catalog.Item.RecStat*` quedan en NULL en todos los items (eran una recreación fija por item de V005 / V027 que la app mostraba como del jugador). Desde V034 **nadie tiene recreación** hasta que la guarde desde la app. Las columnas se conservan; la app ya no las lee
 
 ### V025 — detalle
 
@@ -141,7 +161,7 @@ Los usuarios que se probaron en desarrollo se suben como datos de prueba para qu
 
 Funciona como una rama con commits: **una sola migración ABIERTA a la vez**, no una por cambio.
 
-**Migración abierta actual: ninguna** — la próxima es `V034`. Producción en `v033` (2026-09-27). (Actualizar esta línea al cerrar/abrir.)
+**Migración abierta actual: ninguna** — la próxima es `V035`. V034 cerrada 2026-09-30. Producción en `v033` (2026-09-27). (Actualizar esta línea al cerrar/abrir.)
 
 ### Flujo por cada cambio en la base
 1. El cambio va en la migración ABIERTA (se edita ese archivo; nunca crear `V0NN+1` por cuenta propia). Si no hay ninguna abierta, se abre la siguiente.
