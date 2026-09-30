@@ -79,7 +79,7 @@ V014__sp_update_equipment.sql
 | V031 | Usuarios de prueba de la sesión 2026-09-26 (van también a producción): `OtamendiWar` (otamendi, Guerrero Furia, solo casco) y `RyoskePlayer` / `ryoske` (Oráculo Furia, set recomendado completo) |
 | V032 | Contraseña única de los `demo_*`: `DemoReloader2026!` (reemplaza `Demo1234` de V029; salt nuevo por usuario, FailedAttempts 0). No toca RyoskePlayer ni el seed S000 |
 | V033 | **CERRADA. En producción desde 2026-09-27.** Ultimate Triple Mystic (INT 35 / WIS 30 / HP 1500); columna `catalog.Lapis.IconUrl` (Triples, Mechanic, Pure, Sonic, Max Flash, Chaotic, Life, Absorption con imagen propia; Single/Dual `gem_*.png` por la familia del NOMBRE: Dual Mystic = INT, Dual Wise = WIS); `sp_GetCharacterScreenByUser` devuelve `LapisIconUrl` / `IconUrl`; `catalog.Item.ImageUrl` genérica por tipo (`helmet` / `weapon` / `suit` / `cape` `_img_dark.png`); Oráculo `ClassStatPreference` REC:1 WIS:2 |
-| V034 | **CERRADA (2026-09-30).** Recreación "Over max." de armaduras (ver detalle abajo): `catalog.RecreationBuild` / `RecreationBuildValue` / `RecreationApplicableItemType` / `ClassRecreationPreference` / `ClassRecreationConfig`, `equipment.EquippedItemRecreation` / `EquippedItemRecreationStat`, SPs `equipment.sp_GetRecreationSuggestion` y `equipment.sp_SaveRecreationConfig`, result sets 6..8 en `sp_GetCharacterScreenByUser` |
+| V034 | **CERRADA. En producción desde 2026-09-30.** Recreación "Over max." de armaduras (ver detalle abajo): `catalog.RecreationBuild` / `RecreationBuildValue` / `RecreationApplicableItemType` / `ClassRecreationPreference` / `ClassRecreationConfig`, `equipment.EquippedItemRecreation` / `EquippedItemRecreationStat`, SPs `equipment.sp_GetRecreationSuggestion` y `equipment.sp_SaveRecreationConfig`, result sets 6..8 en `sp_GetCharacterScreenByUser` |
 
 ### V034 — recreación "Over max." (sql-dev, 2026-09-29)
 
@@ -161,7 +161,7 @@ Los usuarios que se probaron en desarrollo se suben como datos de prueba para qu
 
 Funciona como una rama con commits: **una sola migración ABIERTA a la vez**, no una por cambio.
 
-**Migración abierta actual: ninguna** — la próxima es `V035`. V034 cerrada 2026-09-30. Producción en `v033` (2026-09-27). (Actualizar esta línea al cerrar/abrir.)
+**Migración abierta actual: ninguna** — la próxima es `V035`. Producción en `v034` (2026-09-30). (Actualizar esta línea al cerrar/abrir.)
 
 ### Flujo por cada cambio en la base
 1. El cambio va en la migración ABIERTA (se edita ese archivo; nunca crear `V0NN+1` por cuenta propia). Si no hay ninguna abierta, se abre la siguiente.
